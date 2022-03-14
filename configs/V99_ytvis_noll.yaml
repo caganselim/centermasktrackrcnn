@@ -1,0 +1,71 @@
+_BASE_: "Base-CenterMask-VoVNet2.yaml"
+
+INPUT:
+  MASK_FORMAT: "bitmask"
+  DATALOADER:
+    NUM_WORKERS: 4
+
+MODEL:
+  MASKIOU_ON: False
+  WEIGHTS: "checkpoints/base_models/V99_ytvis_base.pth"
+  VOVNET:
+    CONV_BODY : "V-99-eSE"
+  FREEZE:
+    BACKBONE : True
+    PROPOSAL_GENERATOR : False
+    ROI_HEADS : False
+    TRACKER_NET: True
+    GNN : False
+    OBJ_ENCODER : False
+  MATCHER:
+    COEF: [0. , 1.0, 2.0, 10.]
+    OBJ_ENCODER:
+      NAME: "EncoderCNN"
+      ENCODER_CNN:
+        HIDDEN_DIM: 512
+        OUTPUT_DIM: 512
+  ROI_HEADS:
+    NUM_CLASSES: 40
+  FCOS:
+    NUM_CLASSES: 40
+
+
+SOLVER:
+  CHECKPOINT_PERIOD: 5000
+  IMS_PER_BATCH: 24
+  BASE_LR: 0.0005  # Note that RetinaNet uses a different default learning rate
+  STEPS: (50000, 60000)
+  MAX_ITER: 65000
+  WARMUP_ITERS: 1000
+
+OUTPUT_DIR: "output/ytvis-noll"
+
+MASKGNN:
+  TRACKER_MODE: "gnn"
+  EVAL_TYPE: "ytvis_writer"
+  FULLY_UNSUPERVISED: False
+  VIS_TRAIN: False
+  SCORE_THRESH_TEST: 0.1
+  TRAIN_GNN_ONLY: False
+  MASK_FEATURE_SRC: "pooled"
+  LOSSES:
+    FCOS_CLS: True
+    FCOS_LOC: True
+    FCOS_CTR: True
+    MASK: True
+    MASKIOU: False
+    TRACKING: False
+
+DATASETS:
+  TRAIN: ("ytvis_train",)
+  TEST: ("ytvis_test",)
+  DATASET_DIR: "datasets/youtubeVIS/"
+  DATASET_NAME: "ytvis"
+  TRN_JSON_PATH:  "datasets/jsons/ytvis/ytvis_train.json"
+  VAL_JSON_PATH: "datasets/jsons/ytvis/ytvis_val.json"
+  TRN_DOUBLE_LOADER: True
+  VAL_DOUBLE_LOADER: False
+
+TEST:
+  EVAL_PERIOD: 0
+
